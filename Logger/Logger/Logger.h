@@ -6,17 +6,22 @@
 #include<iostream>
 #include<string>
 #include<deque>
+#include<map>
+#include<sstream>
 
 using namespace std;
 
 #define MAX_BYTE 1024   // 单条日志的最大长度
 #define MAX_COUNT 5000  // 单个日志文件存储的最大日志条目数量
 
-#define GetLogMsg(msg) \
-	va_list args; \
-	va_start(args, format); \
-	vsprintf(msg.msgBuff, format, args); \
-	va_end(args); \
+// 定义相关的颜色
+#define NORMAL_COLOR (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)  // 正常颜色
+#define ERROR_COLOR  (FOREGROUND_RED)										//错误颜色
+#define INFO_COLOR	 (NORMAL_COLOR)											//信息颜色
+#define WARNING_COLOR (FOREGROUND_GREEN | FOREGROUND_RED)					//警告颜色
+#define DEBUG_COLOR	 (FOREGROUND_BLUE)										//调试信息颜色
+
+class CLogger;
 
 // 声明一个全局的Log指针
 extern CLogger * pLog;
@@ -55,6 +60,8 @@ public:
 		}
 	};
 
+	map<LOG_LEVEL, string> logTypeString;
+
 public:
 	/* 对外部的接口
 	*/
@@ -86,15 +93,24 @@ public:
 
 	virtual unsigned int Run();
 private:
-
+	void init();
 	void Log(LOG_MSG msg);
+	void ConstructMsg(LOG_MSG *msg, const char* format);
 
 	bool m_bIsRunning;  // 线程是否运行的标志
 	string m_logName;
+	HANDLE stdHandle;  // 控制台窗口句柄
+	FILE *pFile;
+	string filePath;  // 文件目录
 
 	CCriticalSection m_cs;      // 互斥变量
 	deque<LOG_MSG> m_MsgDeque;  // 日志信息队列
 };
+
+
+// 工具函数：返回当前系统时间的字符串格式：如"2017-02-21 19:19:50"
+string GetTimeStr();
+string GetTimeStr2();  // 返回格式：“2017-02-21-19-19-50”
 
 #endif // !LOGGER_H_
 
